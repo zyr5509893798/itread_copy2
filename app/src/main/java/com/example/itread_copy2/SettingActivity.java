@@ -24,8 +24,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.example.itread_copy2.Util.HttpUtil;
 import com.example.itread_copy2.Util.SharedPreferencesUtil;
 import com.longsh.optionframelibrary.OptionBottomDialog;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,11 +42,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+
 public class SettingActivity extends AppCompatActivity {
 
     private SharedPreferencesUtil check;
     private ImageView setting_icon;
     private Button setting_signout;
+    private String result;
+    private String icon_string;
 
     private byte[] a = null;
 
@@ -60,24 +71,29 @@ public class SettingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_setting);
 
+        //别忘了这句！！！！
+        check = SharedPreferencesUtil.getInstance(getApplicationContext());
+
         setting_icon = findViewById(R.id.setting_icon);
         setting_signout = findViewById(R.id.setting_signout);
 
         setting_signout.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                check.setLogin(false); //设置登录状态为未登录
-                Intent intent = new Intent(SettingActivity.this, LoginActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
+                Log.i("zyr","setting_isLogin:"+check.isLogin());
+                signoutWithOkHttp("http://47.102.46.161/user/logout");
             }
         });
+
+        homeNameOkHttp("http://47.102.46.161/user/index");
 
     }
 
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.setting_change_nickname:  //修改昵称
-
+                Intent intent2 = new Intent(SettingActivity.this, ChangeNicknameActivity.class);
+                startActivity(intent2);
                 break;
             case R.id.setting_change_password:  //修改密码
                 Intent intent1 = new Intent(SettingActivity.this, ChangePasswordActivity.class);
@@ -245,6 +261,7 @@ public class SettingActivity extends AppCompatActivity {
                     Bitmap bitmap1 = compressImage(bitmap);
                     File file = getFile(bitmap1);
                     Log.i("zyr", file.toString());
+                    iconWithOkHttp("http://47.102.46.161/user/change_image", filePath);
                     //a = getBitmapByte(bitmap1);
 //                    MyDataBaseHelper myDataBaseHelper = new MyDataBaseHelper(Home.this);
 //                    SQLiteDatabase database = myDataBaseHelper.getReadableDatabase();
@@ -344,4 +361,119 @@ public class SettingActivity extends AppCompatActivity {
         return file;
     }
 
+    //修改头像
+    public void iconWithOkHttp(String address, File icon_file){
+        HttpUtil.userIconWithOkHttp(address, icon_file, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //在这里对异常情况进行处理
+                Log.i( "zyr", " settingActivity : icon_error");
+                result = "error";
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //得到服务器返回的具体内容
+                final String responseData = response.body().string();
+//
+                try{
+                    JSONObject object = new JSONObject(responseData);
+                    result = object.getString("result");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.i( "zyr", "LLL"+responseData);
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (result.equals("头像修改成功")){
+                            Toast.makeText(SettingActivity.this,"头像修改成功",Toast.LENGTH_SHORT).show();
+//                            Intent intent = new Intent(SettingActivity.this, HomeActivity.class);
+//                            startActivity(intent);
+//                            finish();
+                        }else if (result.equals("未上传图片")){
+                            Toast.makeText(SettingActivity.this,"未上传图片",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("图片格式不正确")){
+                            Toast.makeText(SettingActivity.this,"图片格式不正确",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("未提交POST请求")){
+                            Toast.makeText(SettingActivity.this,"提交请求失败",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("error")){
+                        Toast.makeText(SettingActivity.this,"error",Toast.LENGTH_SHORT).show();
+                    }else if (result.equals("用户未登录")){
+                            Toast.makeText(SettingActivity.this,"error",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }//标签页
+        });
+    }
+
+    //退出登录
+    public void signoutWithOkHttp(String address){
+        HttpUtil.signoutWithOkHttp(address, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //在这里对异常情况进行处理
+                Log.i( "zyr", " signoutActivity : error");
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //得到服务器返回的具体内容
+                final String responseData = response.body().string();
+//
+                Log.i("zyr","signout.error:"+responseData);
+                try{
+                    JSONObject object = new JSONObject(responseData);
+                    result = object.getString("result");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.i( "zyr", "LLL"+responseData);
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (result.equals("退出登录成功")){
+                            Toast.makeText(SettingActivity.this,"退出登录成功",Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(SettingActivity.this, LoginActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            check.setLogin(false);
+                            startActivity(intent);
+                        }else if (result.equals("用户未登录")){
+                            Toast.makeText(SettingActivity.this,"用户未登录,退出失败",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }//标签页
+        });
+    }
+
+    //展示头像
+    public void homeNameOkHttp(String address){
+        HttpUtil.homeNameOkHttp(address, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //在这里对异常情况进行处理
+                Log.i( "zyr", " name : error");
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //得到服务器返回的具体内容
+                final String responseData = response.body().string();
+                try{
+                    JSONObject object = new JSONObject(responseData);
+                    JSONObject object1 = object.getJSONObject("user");
+                    icon_string = object1.getString("icon");
+                    Log.i("zyr", "HomeActivity.icon_url:"+icon_string);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.i( "zyr", "LLL"+responseData);
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(SettingActivity.this).load(icon_string).into(setting_icon);
+//                        Toast.makeText(HomeActivity.this,"显示头像",Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }//标签页
+        });
+    }
 }

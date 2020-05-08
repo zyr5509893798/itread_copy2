@@ -89,16 +89,16 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_home);
-        map = new HashMap();
-
-        home_icon = findViewById(R.id.home_icon);
-        home_nickname = findViewById(R.id.home_nickname);
-        home_setting = findViewById(R.id.home_setting);
-        //获取用户名
-        //username = check.getAccountId();
-        nameAddress = "http://49.233.166.246/user/index";
-
-        homeNameOkHttp(nameAddress);
+//        map = new HashMap();
+//
+//        home_icon = findViewById(R.id.home_icon);
+//        home_nickname = findViewById(R.id.home_nickname);
+//        home_setting = findViewById(R.id.home_setting);
+//        //获取用户名
+//        //username = check.getAccountId();
+//        nameAddress = "http://47.102.46.161/user/index";
+//
+//        homeNameOkHttp(nameAddress);
 
 //        //头像，昵称
 //        Thread thread;
@@ -145,6 +145,104 @@ public class HomeActivity extends AppCompatActivity {
 //        thread.start();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        map = new HashMap();
+
+        home_icon = findViewById(R.id.home_icon);
+        home_nickname = findViewById(R.id.home_nickname);
+        home_setting = findViewById(R.id.home_setting);
+        //获取用户名
+        //username = check.getAccountId();
+        nameAddress = "http://47.102.46.161/user/index";
+
+        homeNameOkHttp(nameAddress);
+
+    }
+
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.home_icon:
+
+                AlertDialog.Builder dialog = new AlertDialog.Builder (HomeActivity.this);
+                dialog.setTitle("是否更改头像？");
+                dialog.setMessage("若更改头像请点击确定");
+                dialog.setCancelable(false);
+                dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+                dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+//                        Toast.makeText(Home.this, "相机相机相册相册", Toast.LENGTH_SHORT).show();
+
+                        List<String> stringList = new ArrayList<String>();
+                        stringList.add("拍照");
+                        stringList.add("从相册选择");
+                        final OptionBottomDialog optionBottomDialog = new OptionBottomDialog(HomeActivity.this, stringList);
+                        optionBottomDialog.setItemClickListener(new AdapterView.OnItemClickListener() {
+
+
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                //取消底部弹框
+                                //optionBottomDialog.dismiss();
+                                switch (position) {
+                                    case 0:
+                                        //测试使用，验证是否为position= 0
+                                        //Toast.makeText(RegisterIn.this,"position 0", Toast.LENGTH_SHORT ).show();
+
+                                        //启动相机程序
+                                        //隐式Intent
+                                        Intent intent_photo = new Intent( "android.media.action.IMAGE_CAPTURE" );
+                                        //putExtra()指定图片的输出地址，填入之前获得的Uri对象
+                                        imageUri = ImageUtils.getImageUri( HomeActivity.this );
+                                        intent_photo.putExtra( MediaStore.EXTRA_OUTPUT, imageUri );
+                                        //startActivity( intent_photo );
+                                        startActivityForResult( intent_photo, TAKE_PHOTO );
+                                        //底部弹框消失
+                                        optionBottomDialog.dismiss();
+                                        break;
+                                    case 1:
+                                        //测试使用，验证是否为position= 1
+                                        //Toast.makeText(RegisterIn.this,"position 1", Toast.LENGTH_SHORT ).show();
+                                        //打开相册
+                                        openAlbum();
+                                        //底部弹框消失
+                                        optionBottomDialog.dismiss();
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            //写到这了
+
+                        });
+
+                    }
+                });
+                dialog.show();
+                break;
+            case R.id.home_setting:
+                Intent intent1 = new Intent(HomeActivity.this, SettingActivity.class);
+                startActivity(intent1);
+                break;
+            case R.id.home_bookcomment:
+                Intent intent2 = new Intent(HomeActivity.this, MyBookCommentsActivity.class);
+                startActivity(intent2);
+                break;
+            case R.id.home_shortcomment:
+                Intent intent3 = new Intent(HomeActivity.this, MyShortCommentsActivity.class);
+                startActivity(intent3);
+                break;
+        }
+    }
+
     //获得头像昵称
     public void homeNameOkHttp(String address){
         HttpUtil.homeNameOkHttp(address, new Callback() {
@@ -162,6 +260,7 @@ public class HomeActivity extends AppCompatActivity {
                     JSONObject object1 = object.getJSONObject("user");
                     nickname = object1.getString("nickname");
                     icon = object1.getString("icon");
+                    Log.i("zyr", "HomeActivity.icon_url:"+icon);
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Log.i( "zyr", "LLL"+responseData);
@@ -171,7 +270,7 @@ public class HomeActivity extends AppCompatActivity {
                     public void run() {
                         home_nickname.setText(nickname);
                         Glide.with(HomeActivity.this).load(icon).into(home_icon);
-                        Toast.makeText(HomeActivity.this,"显示头像",Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(HomeActivity.this,"显示头像",Toast.LENGTH_SHORT).show();
                     }
                 });
             }//标签页
@@ -361,78 +460,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.home_icon:
 
-                AlertDialog.Builder dialog = new AlertDialog.Builder (HomeActivity.this);
-                dialog.setTitle("是否更改头像？");
-                dialog.setMessage("若更改头像请点击确定");
-                dialog.setCancelable(false);
-                dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                });
-                dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-//                        Toast.makeText(Home.this, "相机相机相册相册", Toast.LENGTH_SHORT).show();
-
-                        List<String> stringList = new ArrayList<String>();
-                        stringList.add("拍照");
-                        stringList.add("从相册选择");
-                        final OptionBottomDialog optionBottomDialog = new OptionBottomDialog(HomeActivity.this, stringList);
-                        optionBottomDialog.setItemClickListener(new AdapterView.OnItemClickListener() {
-
-
-                            @Override
-                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                //取消底部弹框
-                                //optionBottomDialog.dismiss();
-                                switch (position) {
-                                    case 0:
-                                        //测试使用，验证是否为position= 0
-                                        //Toast.makeText(RegisterIn.this,"position 0", Toast.LENGTH_SHORT ).show();
-
-                                        //启动相机程序
-                                        //隐式Intent
-                                        Intent intent_photo = new Intent( "android.media.action.IMAGE_CAPTURE" );
-                                        //putExtra()指定图片的输出地址，填入之前获得的Uri对象
-                                        imageUri = ImageUtils.getImageUri( HomeActivity.this );
-                                        intent_photo.putExtra( MediaStore.EXTRA_OUTPUT, imageUri );
-                                        //startActivity( intent_photo );
-                                        startActivityForResult( intent_photo, TAKE_PHOTO );
-                                        //底部弹框消失
-                                        optionBottomDialog.dismiss();
-                                        break;
-                                    case 1:
-                                        //测试使用，验证是否为position= 1
-                                        //Toast.makeText(RegisterIn.this,"position 1", Toast.LENGTH_SHORT ).show();
-                                        //打开相册
-                                        openAlbum();
-                                        //底部弹框消失
-                                        optionBottomDialog.dismiss();
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                            //写到这了
-
-                        });
-
-                    }
-                });
-                dialog.show();
-                break;
-            case R.id.home_setting:
-                Intent intent1 = new Intent(HomeActivity.this, LoginActivity.class);
-                startActivity(intent1);
-                break;
-        }
-    }
 
     //对bitmap进行质量压缩
     public static Bitmap compressImage(Bitmap image) {

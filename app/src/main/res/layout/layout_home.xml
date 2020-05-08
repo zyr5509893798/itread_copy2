@@ -86,6 +86,45 @@
             android:layout_marginLeft="30dip"
             android:layout_marginRight="30dip"
             android:background="#FFFFFF">
+
+            <RelativeLayout
+                android:id="@+id/home_bookcomment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="我的书评"
+                    android:textSize="46px"
+                    android:textStyle="bold"
+                    android:layout_marginTop="140px"
+                    android:layout_marginLeft="100px"
+                    android:layout_marginRight="150px"
+                    android:layout_centerVertical="true">
+                </TextView>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/home_shortcomment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:onClick="onClick">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="我的短评"
+                    android:textSize="46px"
+                    android:textStyle="bold"
+                    android:layout_marginTop="140px"
+                    android:layout_marginLeft="150px"
+                    android:layout_marginRight="100px"
+                    android:layout_centerVertical="true">
+                </TextView>
+            </RelativeLayout>
         </RelativeLayout>
 
     </RelativeLayout>

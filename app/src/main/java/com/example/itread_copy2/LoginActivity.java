@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.method.HideReturnsTransformationMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -50,6 +51,7 @@ public class LoginActivity extends AppCompatActivity {
     private String demo = "0";
     private Map map;
     private String code;
+    private String header;
 
     List<Map<String, Object>> list = new ArrayList<>();
     @Override
@@ -57,6 +59,9 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_login);
 
+//        login_username.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+
+        //别忘了这句！！！！
         check = SharedPreferencesUtil.getInstance(getApplicationContext());
         login_username = findViewById(R.id.login_username);
         login_password = findViewById(R.id.login_password);
@@ -70,7 +75,7 @@ public class LoginActivity extends AppCompatActivity {
 //                String loginAddress="http://www.njggpt.com/image.jsp?t=";
 //                String loginAddress="http://www.njggpt.com/dologin.action?pwd=123456&dhhm=18652830666&sign=2065";
                 //49.233.166.246/user/login
-                String loginAddress="http://49.233.166.246/user/login";
+                String loginAddress="http://47.102.46.161/user/login";
                 String loginAccount = login_username.getText().toString();
                 String loginPassword = login_password.getText().toString();
                 if (TextUtils.isEmpty(loginAccount)){
@@ -105,6 +110,10 @@ public class LoginActivity extends AppCompatActivity {
                 Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
                 startActivity(intent);
                 break;
+            case R.id.login_forgetpassword:
+                Intent intent1 = new Intent(LoginActivity.this, FindPasswordActivity.class);
+                startActivity(intent1);
+                break;
         }
     }
 
@@ -116,17 +125,19 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 //在这里对异常情况进行处理
                 Log.i( "zyr", " name : error");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(LoginActivity.this, "网络出现了问题...", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 //得到服务器返回的具体内容
                 final String responseData = response.body().string();
-                String header = response.header("set-cookie");
-                String JSESSIONID=header.substring(0, 43);
-                Log.i("zyr","0");
-                Log.i("zyr","login_jsessionid:"+JSESSIONID);
-                check.setCookie(true);//设置已获得cookie
-                check.saveCookie(JSESSIONID);//保存获得的cookie
+                header = response.header("set-cookie");
+//
                 try{
                     JSONObject object = new JSONObject(responseData);
                     result = object.getString("result");
@@ -138,13 +149,28 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (result.equals("登陆成功")){
+                            String JSESSIONID=header.substring(0, 43);
+                            Log.i("zyr","0");
+                            Log.i("zyr","login_jsessionid:"+JSESSIONID);
+                            check.setCookie(true);//设置已获得cookie
+                            check.saveCookie(JSESSIONID);//保存获得的cookie
                             check.setLogin(true);  //设置登录状态为已登录
+                            Log.i("zyr","islogin:"+check.isLogin());
                             check.setAccountId(account);  //添加账户信息
                             Toast.makeText(LoginActivity.this,"登录成功",Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                             startActivity(intent);
-                        }else{
-                            Toast.makeText(LoginActivity.this,"登录失败",Toast.LENGTH_SHORT).show();
+                            finish();
+                        }else if (result.equals("用户名不存在")){
+                            Toast.makeText(LoginActivity.this,"该用户不存在",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("用户名或者密码错误")){
+                            Toast.makeText(LoginActivity.this,"用户名或者密码错误",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("该用户已经被冻结")){
+                            Toast.makeText(LoginActivity.this,"该用户尚未完成注册环节，处于冻结状态",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("未提交全部参数")){
+                            Toast.makeText(LoginActivity.this,"用户名或密码为空",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("未提交POST请求")){
+                            Toast.makeText(LoginActivity.this,"提交请求失败",Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -276,4 +302,41 @@ public class LoginActivity extends AppCompatActivity {
         };
         editText.setFilters(new InputFilter[]{filter});
     }
+
+    //实现点按钮想读
+    public void changeStautsWithOkHttp(String address){
+        HttpUtil.changeStatusWithOkHttp(address,"0", new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //在这里对异常情况进行处理
+                Log.i( "yyyyy", " name :status error");
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //得到服务器返回的具体内容
+                final String responseData = response.body().string();
+//
+                try{
+                    JSONObject object = new JSONObject(responseData);
+                    result = object.getString("result");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.i( "yyyy", "LLL"+responseData);
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (result.equals("200")){
+                            Toast.makeText(LoginActivity.this,"已想读",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("请求失败")){
+                            Toast.makeText(LoginActivity.this,"请求失败，请稍后重试",Toast.LENGTH_SHORT).show();
+                        }else if (result.equals("用户未登陆")){
+                            Toast.makeText(LoginActivity.this,"用户未登陆，无法添加",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }//标签页
+        });
+    }
+
 }

@@ -14,8 +14,10 @@ import okhttp3.Call;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.FormBody;
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -23,30 +25,8 @@ import okhttp3.RequestBody;
 public class HttpUtil {
 
     private SharedPreferencesUtil check;
-
-    public static String attachHttpGetParams(String url, LinkedHashMap<String, String> params) {
-
-        Iterator<String> keys = params.keySet().iterator();
-        Iterator<String> values = params.values().iterator();
-        StringBuffer stringBuffer = new StringBuffer();
-        stringBuffer.append("?");
-
-        for (int i = 0; i < params.size(); i++) {
-            String value = null;
-            try {
-                value = URLEncoder.encode(values.next(), "utf-8");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            stringBuffer.append(keys.next() + "=" + value);
-            if (i != params.size() - 1) {
-                stringBuffer.append("&");
-            }
-        }
-
-        return url + stringBuffer.toString();
-    }
+    public static final MediaType FORM_CONTENT_TYPE
+            = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
 
     //登录
     public static void loginWithOkHttp(String address, String account, String password, okhttp3.Callback callback){
@@ -64,11 +44,11 @@ public class HttpUtil {
     //注册
     public static void registerWithOkHttp(String address, String account, String email, String password, String repassword, okhttp3.Callback callback) {
         OkHttpClient client = new OkHttpClient();
-        FormBody body = new FormBody.Builder()
+        RequestBody body = new FormBody.Builder()
                 .add("username", account)
                 .add("email", email)
                 .add("password", password)
-                .add("repassword", repassword)
+                .add("name","读书")
                 .build();
         //String cookie=CliniciansApplication.getOkhttpCookie();
         Request request = new Request.Builder()
@@ -76,9 +56,7 @@ public class HttpUtil {
                 .post(body)
                 .build();
 //        client.newCall(request).enqueue(callback);
-        Call call = client.newCall(request);
-        //5.请求加入调度,重写回调方法
-        call.enqueue(callback);
+        client.newCall(request).enqueue(callback);
     }
 
     //修改密码post请求
@@ -87,7 +65,6 @@ public class HttpUtil {
         FormBody body = new FormBody.Builder()
                 .add("old_password", old_password)
                 .add("new_password", new_password)
-                .add("re_password", renew_password)
                 .build();
         Request request = new Request.Builder()
                 .url(address)
@@ -100,7 +77,163 @@ public class HttpUtil {
         call.enqueue(callback);
     }
 
-   //反登录get
+
+    //home页get头像昵称
+    public static void homeNameOkHttp(String address,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+
+    //post传照片文件
+    public static void iconWithOkHttp(String address, String file, okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+//        MediaType MEDIATYPE = MediaType.parse("image/jpeg; charset=utf-8");multipart/form-data
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("image", "icon",
+                        RequestBody.create(MediaType.parse("image/jpeg; charset=utf-8"), new File(file)))
+                .build();
+
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .post(requestBody)
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //post传email验证码
+    public static void emailWithOkHttp(String address, String email_num, okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = new FormBody.Builder()
+                .add("code",email_num)
+                .build();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .post(body)
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //修改昵称
+    public static void nicknameWithOkHttp(String address, String new_nickname, okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = new FormBody.Builder()
+                .add("name",new_nickname)
+                .build();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .post(body)
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //退出登录
+    public static void signoutWithOkHttp(String address,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //忘记密码
+    public static void findWithOkHttp(String address, String account, String email, String password, String repassword, okhttp3.Callback callback) {
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = new FormBody.Builder()
+                .add("username", account)
+                .add("email", email)
+                .add("new_password", password)
+                .add("re_password", repassword)
+                .build();
+        Request request = new Request.Builder()
+                .url(address)
+                .post(body)
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //我的书评get
+    public static void mybookCommentWithOkHttp(String address,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //我的短评get
+    public static void myshortCommentWithOkHttp(String address,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    public static void file_submit(String url , String filepath,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        File file = new File(filepath);
+        Log.i("zyr",filepath);
+        RequestBody fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), file);
+        //请求体
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+//                .addPart(Headers.of(
+//                        "Content-Disposition",
+//                        "form-data; name=\"filename\""),
+//                        RequestBody.create(null, "lzr"))//这里是携带上传的其他数据
+                .addPart(Headers.of(
+                        "Content-Disposition",
+                        "form-data; name=\"mFile\"; filename=\"" + "yyy.jpeg" + "\""), fileBody)
+                .build();
+        //请求的地址
+        Request request = new Request.Builder()
+                .url(url)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .post(requestBody)
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //上传头像获得url   POST
+    public static void userIconWithOkHttp(String address,File file, okhttp3.Callback callback)
+    {
+        OkHttpClient client = new OkHttpClient();
+        MultipartBody multipartBody = new MultipartBody.Builder()
+                .addFormDataPart("image", file.getName(), RequestBody.create(MediaType.parse("image/jpeg"), file))
+                .setType(MultipartBody.FORM)
+                .build();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .post(multipartBody)
+                .build();
+
+        client.newCall(request).enqueue(callback);
+    }
+
+    //个人中心想读已读在读get
+    public static void WantReadWithOkHttp(String address,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
+
+    //反登录get
     public static void loginOffOkHttp(String address, String account, String password, okhttp3.Callback callback){
         Request request;
         OkHttpClient client = new OkHttpClient();
@@ -128,8 +261,8 @@ public class HttpUtil {
         client.newCall(request).enqueue(callback);
     }
 
-    //home页get头像昵称
-    public static void homeNameOkHttp(String address,okhttp3.Callback callback){
+    //退出登录
+    public static void getAdapterWithOkHttp(String address,okhttp3.Callback callback){
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(address)
@@ -138,33 +271,38 @@ public class HttpUtil {
         client.newCall(request).enqueue(callback);
     }
 
-
-    //post传照片文件
-    public static void PassPhotoWithOkHttp(String address, File file, okhttp3.Callback callback){
+    //知乎日报
+    public static void newsPaperWithOkHttp(String address,okhttp3.Callback callback){
         OkHttpClient client = new OkHttpClient();
-        MediaType MEDIATYPE = MediaType.parse("image/jpeg; charset=utf-8");
-        RequestBody body = RequestBody.create(MEDIATYPE, file);
         Request request = new Request.Builder()
                 .url(address)
-                .post(RequestBody.create(MEDIATYPE,file))
+                .header("Cookie",SharedPreferencesUtil.getCookie())
                 .build();
         client.newCall(request).enqueue(callback);
     }
 
-    private static final HashMap<String, List<Cookie>> cookieStore = new HashMap<>();
-    private static OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .cookieJar(new CookieJar() {
-                @Override
-                public void saveFromResponse(HttpUrl httpUrl, List<Cookie> list) {
-                    cookieStore.put(httpUrl.host(), list);
-                }
+    //删除我的评论
+    public static void delMyCommentWithOkHttp(String address,okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
 
-                @Override
-                public List<Cookie> loadForRequest(HttpUrl httpUrl) {
-                    List<Cookie> cookies = cookieStore.get(httpUrl.host());
-                    return cookies != null ? cookies : new ArrayList<Cookie>();
-                }
-            })
-            .build();
+    //设置想读
+    public static void changeStatusWithOkHttp(String address, String status, okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = new FormBody.Builder()
+                .add("status",status)
+                .build();
+        Request request = new Request.Builder()
+                .url(address)
+                .header("Cookie",SharedPreferencesUtil.getCookie())
+                .post(body)
+                .build();
+        client.newCall(request).enqueue(callback);
+    }
 
 }

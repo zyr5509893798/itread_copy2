@@ -66,9 +66,21 @@
                 android:layout_gravity="center"
                 android:onClick="onClick"
                 android:background="@drawable/icon2"
+                android:src="@drawable/icon1"
                 android:layout_marginTop="50dip"
                 android:layout_centerHorizontal="true">
             </de.hdodenhof.circleimageview.CircleImageView>
+
+            <!--<de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/setting_icon_popo1"
+                android:layout_width="100sp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:onClick="onClick"
+                android:src="@drawable/icon2"
+                android:layout_marginTop="50dip"
+                android:layout_centerHorizontal="true">
+            </de.hdodenhof.circleimageview.CircleImageView>-->
         </RelativeLayout>
 
         <RelativeLayout

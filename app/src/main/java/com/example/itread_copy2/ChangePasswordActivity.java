@@ -57,7 +57,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         password_finish.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                String passwordAddress="http://49.233.166.246/user/change_password";
+                String passwordAddress="http://47.102.46.161/user/change_password";
                 String old_password = password_old.getText().toString();
                 String new_password = password_new.getText().toString();
                 String renew_password = password_renew.getText().toString();
@@ -80,6 +80,14 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.password_back:
+                finish();
+                break;
+        }
     }
 
     //更改密码
